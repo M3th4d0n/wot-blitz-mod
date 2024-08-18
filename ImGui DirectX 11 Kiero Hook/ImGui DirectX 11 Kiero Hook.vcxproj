@@ -91,6 +91,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -165,6 +166,7 @@
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="imgui\ImGuiNotify.hpp" />
     <ClInclude Include="imgui\imgui_impl_dx11.h" />
     <ClInclude Include="imgui\imgui_impl_win32.h" />
     <ClInclude Include="imgui\imgui_internal.h" />

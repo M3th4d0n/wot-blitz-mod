@@ -121,6 +121,9 @@
     <ClInclude Include="includes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="imgui\ImGuiNotify.hpp">
+      <Filter>imgui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="kiero\minhook\dll_resources\MinHook.def">
