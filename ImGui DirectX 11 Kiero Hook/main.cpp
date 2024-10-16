@@ -10,14 +10,8 @@ ID3D11Device* pDevice = NULL;
 ID3D11DeviceContext* pContext = nullptr;
 ID3D11RenderTargetView* mainRenderTargetView = nullptr;
 
-bool freezeValue = false;
-int* targetAddress = (int*)0x0D34DAE4;
-int originalValue = 120;
+
 bool showmenu = true;
-bool drawWatermark = true;
-bool fpsunlock = false;
-bool developermode = false;
-bool infowindow = false;
 std::ofstream logFile("log.txt");
 enum Tab {
     TAB_SETTINGS,
@@ -25,78 +19,12 @@ enum Tab {
     TAB_NONE,
     TAB_WINDOWS
 };
-uintptr_t GetBaseAddress() {
-    return reinterpret_cast<uintptr_t>(GetModuleHandle(NULL));
-}
-int ReadMemoryInt(uintptr_t address) {
-    return *reinterpret_cast<int*>(address);
-}
+
 
 Tab currentTab = TAB_SETTINGS;
-std::string ReadFileContent(const std::string& filePath) {
-    std::ifstream file(filePath);
-    if (!file.is_open()) {
-        return "Unable to open file";
-    }
 
-    std::ostringstream contentStream;
-    contentStream << file.rdbuf();
-    return contentStream.str();
-}
 
-ImVec4 GetTextColor(const std::string& line) {
-    if (line.find("success") != std::string::npos) {
-        return ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
-    }
-    else if (line.find("error") != std::string::npos) {
-        return ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
-    }
-    else if (line.find("info") != std::string::npos) {
-        return ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
-    }
-    else {
-        return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-    }
-}
-void RenderLogWindow() {
-    static std::string logFilePath = "log.txt";
-    static std::string logContent = "";
-    static std::time_t lastModificationTime = 0;
 
-    
-    struct stat fileInfo;
-    if (stat(logFilePath.c_str(), &fileInfo) == 0) {
-        if (fileInfo.st_mtime != lastModificationTime) {
-            lastModificationTime = fileInfo.st_mtime;
-            logContent = ReadFileContent(logFilePath);
-        }
-    }
-
-    ImGui::SetNextWindowSize(ImVec2(800, 600));
-    ImGui::Begin("Logs", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-
-    std::istringstream logStream(logContent);
-    std::string line;
-    while (std::getline(logStream, line)) {
-        ImVec4 color = GetTextColor(line);
-        ImGui::PushStyleColor(ImGuiCol_Text, color);
-        ImGui::TextWrapped("%s", line.c_str());
-        ImGui::PopStyleColor();
-    }
-
-    ImGui::End();
-}
-void RenderInfoWindow() {
-    ImGui::SetNextWindowSize(ImVec2(300, 150));
-    ImGui::Begin("Info", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    uintptr_t fpsoffset = 0x3947308;
-    uintptr_t fpsaddress = GetBaseAddress() + fpsoffset;
-    int fpsValue = ReadMemoryInt(fpsaddress);
-    ImGui::Text("base addres: 0x%d ", GetBaseAddress()); //idk 
-    ImGui::Text("fps addres: 0x%d ", fpsaddress); //idk 
-    ImGui::Text("fps limit: %d", fpsValue);
-    ImGui::End();
-}
 void Log(const std::string& level, const std::string& message) {
     std::time_t now = std::time(nullptr);
     std::tm timeinfo;
@@ -106,14 +34,7 @@ void Log(const std::string& level, const std::string& message) {
         << level << ": " << message << std::endl;
     logFile.flush();
 }
-struct SearchResult {
-    //signs
-    std::string name;
-    uintptr_t address;
-    std::string signature;
-    std::string value;
-    std::string offset;
-};
+
 
 void ApplyCustomStyle() {
     ImGuiStyle& style = ImGui::GetStyle();
@@ -177,51 +98,6 @@ void ApplyCustomStyle() {
     style.GrabRounding = 3.0f;
 }
 
-void DrawWatermark() {
-    if (!drawWatermark)
-        return;
-
-    float current_fps = ImGui::GetIO().Framerate;
-
-    time_t now = time(NULL);
-    struct tm timeinfo;
-    localtime_s(&timeinfo, &now);
-    char time_str[10];
-    strftime(time_str, sizeof(time_str), "%H:%M:%S", &timeinfo);
-
-    char watermark_text[256];
-    sprintf_s(watermark_text, sizeof(watermark_text), "pivoware [beta] | FPS: %.1f | %s",
-        current_fps, time_str);
-
-    ImVec4 bg_color = ImVec4(0.1f, 0.1f, 0.1f, 0.6f);
-    ImVec4 line_color = ImVec4(0.9f, 0.9f, 0.9f, 1.0f);
-    ImVec4 text_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-
-    ImVec2 text_size = ImGui::CalcTextSize(watermark_text);
-    ImVec2 window_size = ImVec2(text_size.x + 20, text_size.y + 20);
-
-    ImGui::SetNextWindowSize(window_size);
-    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
-
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
-        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
-        ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoBackground;
-
-    ImGui::Begin("##Watermark", nullptr, window_flags);
-
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    ImVec2 p = ImGui::GetWindowPos();
-    draw_list->AddRectFilled(p, ImVec2(p.x + window_size.x, p.y + window_size.y), ImGui::GetColorU32(bg_color), 8.0f);
-
-    float line_height = 4.0f;
-    draw_list->AddRectFilled(ImVec2(p.x, p.y), ImVec2(p.x + window_size.x, p.y + line_height), ImGui::GetColorU32(line_color));
-
-    ImGui::SetCursorPos(ImVec2(10, (window_size.y - text_size.y) * 0.5f));
-    ImGui::TextColored(text_color, watermark_text);
-
-    ImGui::End();
-}
 
 void InitImGui() {
     Log("info", "Initializing ImGui context");
@@ -251,10 +127,11 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         return false;
         Log("info", "wndproc");
     }
-    
-    
+
+
     return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
 }
+
 
 
 HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags) {
@@ -276,9 +153,7 @@ HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT 
 
     if (GetAsyncKeyState(VK_INSERT) & 1) {
         showmenu = !showmenu;
-        if (!showmenu) {
-            developermode = false;
-        }
+
     }
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -315,51 +190,17 @@ HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT 
 
         if (currentTab == TAB_SETTINGS) {
             ImGui::Text("Settings");
-            ImGui::Checkbox("Show Watermark", &drawWatermark);
-            ImGui::Checkbox("Unlock Fps", &fpsunlock);
-
-            if (fpsunlock) {
-                uintptr_t offset = 0x3947308;
-                uintptr_t address = GetBaseAddress() + offset;
-                int newValue = 1337;
-                *reinterpret_cast<int*>(address) = newValue;
-            }
-            else {
-                uintptr_t offset = 0x3947308;
-                uintptr_t address = GetBaseAddress() + offset;
-                int newValue = 60;
-                *reinterpret_cast<int*>(address) = newValue;
-            }
 
         }
         else if (currentTab == TAB_ACTIONS) {
-            ImGui::Text("Actions");
-            if (ImGui::Button("Open Log File")) {
-                ShellExecute(0, "open", "log.txt", 0, 0, SW_SHOW);
-            }
-            if (ImGui::Button("Write Log")) {
-                Log("error", "Button Action");
-            }
-            if (ImGui::Button("Reload styles ")) {
-                ApplyCustomStyle();
-            }
+
         }
         else if (currentTab == TAB_WINDOWS) {
-            ImGui::Checkbox("Developer Mode", &developermode);
-            ImGui::Checkbox("Info Window", &infowindow);
+            ImGui::Text("windows tab content");
         }
 
         ImGui::Columns(1);
         ImGui::End();
-    }
-    if (drawWatermark) {
-        DrawWatermark();
-    }
-    if (developermode) {
-        RenderLogWindow();
-    }
-    if (infowindow) {
-        RenderInfoWindow();
     }
 
     ImGui::Render();
@@ -396,7 +237,7 @@ DWORD WINAPI MainThread(LPVOID lpReserved) {
     if (!init_hook) {
         Log("error", "Failed to initialize Kiero after multiple attempts");
     }
-    
+
     return TRUE;
 }
 

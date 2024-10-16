@@ -19,6 +19,15 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{3ba57e14-8ac2-485a-b12c-f06690c43d6e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Systems">
+      <UniqueIdentifier>{f155d3b6-e008-471c-b520-94f5e715bc05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Systems\Log">
+      <UniqueIdentifier>{3bc8e0f6-e54e-4d9c-b33d-167d2961a333}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Systems\Script">
+      <UniqueIdentifier>{59744b27-55ae-4b47-8d50-b5d4856f5c84}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="kiero\minhook\src\buffer.c">
@@ -59,6 +68,9 @@
     </ClCompile>
     <ClCompile Include="imgui\imgui_widgets.cpp">
       <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptSystem.cpp">
+      <Filter>Systems\Script</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -130,6 +142,12 @@
     </ClInclude>
     <ClInclude Include="json.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="detours.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptSystem.h">
+      <Filter>Systems\Script</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
